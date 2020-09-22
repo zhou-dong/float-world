@@ -7,65 +7,44 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Sky } from 'three/examples/jsm/objects/Sky.js';
 import { Water } from 'three/examples/jsm/objects/Water.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import filePath from "jellyfish"
-
-const publicPath = "http://localhost:3000";
-
-console.log(filePath);
 
 var container, stats;
 var camera, scene, renderer;
 var controls, water, sun, mesh;
 
-// function loadJellyfish() {
-//     var loader = new GLTFLoader();
+const loader = new GLTFLoader();
+const onProgress = () => { };
+const onError = (errorMessage) => { console.log(errorMessage); };
 
-//     // Optional: Provide a DRACOLoader instance to decode compressed mesh data
-//     // var dracoLoader = new DRACOLoader();
-//     // dracoLoader.setDecoderPath('/examples/js/libs/draco/');
-//     // loader.setDRACOLoader(dracoLoader);
+const getRandom = (num) => {
+    const random = Math.random() * num;
+    return Math.random() > 0.5 ? random : random * -1;
+};
 
-//     // Load a glTF resource
+const getRandomPosition = () => {
+    return new THREE.Vector3(getRandom(150), Math.random(10), getRandom(40));
+};
 
-//     console.log(`${publicPath}/jellyfish/scene.gltf`);
+function loadJellyfish0(position) {
+    const url = "jellyfish_0/scene.gltf";
 
-//     loader.load(
-//         // resource URL
-//         `${publicPath}/jellyfish/scene.gltf`,
-//         // called when the resource is loaded
-//         function (gltf) {
+    if (!position) {
+        position = getRandomPosition();
+    }
 
-//             scene.add(gltf.scene);
-
-//             // gltf.animations; // Array<THREE.AnimationClip>
-//             // gltf.scene; // THREE.Group
-//             // gltf.scenes; // Array<THREE.Group>
-//             // gltf.cameras; // Array<THREE.Camera>
-//             // gltf.asset; // Object
-
-//         },
-//         // called while loading is progressing
-//         function (xhr) {
-
-    
-//             console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-
-//         },
-//         // called when loading has errors
-//         function (error) {
-
-//             console.log('An error happened', error);
-
-//         }
-//     );
-// }
+    const onLoad = (gltf) => {
+        gltf.scene.position.copy(position);
+        gltf.scene.scale.set(10, 10, 10) // scale here
+        scene.add(gltf.scene);
+    };
+    loader.load(url, gltf => onLoad(gltf), onProgress, onError);
+}
 
 function init() {
 
     container = document.getElementById('root');
 
     //
-
     renderer = new THREE.WebGLRenderer();
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -83,17 +62,12 @@ function init() {
     sun = new THREE.Vector3();
 
     // 
-    // const j = loadJellyfish();
 
     // Water
 
     var waterGeometry = new THREE.PlaneBufferGeometry(10000, 10000);
 
-    // var waterNormals = new THREE.TextureLoader().load('https://threejs.org/examples/textures/waternormals.jpg', function (texture) {
-    //     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-    // })
-
-    var waterNormals = new THREE.TextureLoader().load(`${publicPath}/waternormals.jpg`, function (texture) {
+    var waterNormals = new THREE.TextureLoader().load("/waternormals.jpg", function (texture) {
         texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
     });
 
@@ -156,11 +130,11 @@ function init() {
 
     //
 
-    var geometry = new THREE.BoxBufferGeometry(30, 30, 30);
+    var geometry = new THREE.BoxBufferGeometry(6, 6, 6);
     var material = new THREE.MeshStandardMaterial({ roughness: 0 });
 
     mesh = new THREE.Mesh(geometry, material);
-    scene.add(mesh);
+    // scene.add(mesh);
 
     //
 
@@ -220,13 +194,28 @@ function render() {
 
     var time = performance.now() * 0.001;
 
-    mesh.position.y = Math.sin(time) * 20 + 5;
+    mesh.position.x = Math.sin(time) * 20;
+    mesh.position.z = Math.cos(time) * 20;
     mesh.rotation.x = time * 0.5;
     mesh.rotation.z = time * 0.51;
 
     water.material.uniforms['time'].value += 1.0 / 60.0;
 
-    // console.log(water.material.uniforms['time'].value);
+    scene.children.map(child => {
+        if (child.type === "Group" && child.position) {
+            // let speed = Math.random(10);
+
+            // if (child.position.x > window.innerWidth || child.position.x < 0) {
+            //     speed = speed;
+            // }
+
+            // child.position.x += speed;
+
+            // child.position.x = Math.sin(time) * 20;
+            // child.position.y = Math.sin(time) * 20;
+            child.rotation.y = time * 0.4;
+        }
+    })
 
     renderer.render(scene, camera);
 
@@ -234,8 +223,29 @@ function render() {
 
 function App() {
     init();
-    animate();
 
+
+    console.log(scene);
+
+    for (let i = 0; i < 3; i++) {
+        // loadJellyfish0();
+    }
+
+    for (let i = 0; i < 30; i++) {
+        // loadJellyfish3();
+    }
+
+    loadJellyfish0(new THREE.Vector3(-60, 0, 5));
+    loadJellyfish0(new THREE.Vector3(50, 2, 5));
+    loadJellyfish0(new THREE.Vector3(0, 0, 30));
+    // loadJellyfish4(new THREE.Vector3(0, 0, 30));
+    // loadModels("jellyfish_4/scene.gltf", new THREE.Vector3(90, 0, 0));
+    // loadVeribot(new THREE.Vector3(-120, 2, 0));
+    // loadJellyfish1();
+    // loadJellyfish2();
+    // loadJellyfish3();
+
+    animate();
     return <React.Fragment />;
 }
 
